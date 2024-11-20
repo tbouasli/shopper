@@ -89,7 +89,9 @@ describe('POST /ride/estimate', () => {
     })
 
     it('should get the ride estimate based on the origin and destination', async () => {
-      const response = await supertest(URL).post('/ride/estimate');
+      const body = mockRequestBody()
+
+      const response = await supertest(URL).post('/ride/estimate').send(body)
 
       expect(response.status).toBe(200);
       expect(response.body).toMatchObject<SuccessResponseBody>({
