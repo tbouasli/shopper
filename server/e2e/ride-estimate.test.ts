@@ -1,114 +1,170 @@
-import supertest from 'supertest';
-import { describe, it, expect } from 'vitest';
-import { faker } from '@faker-js/faker';
+import supertest from "supertest";
+import { describe, it, expect, afterAll } from "vitest";
+import { faker } from "@faker-js/faker";
+import { server } from "@/index";
 
-const URL = process.env.URL ?? 'http://localhost:3000';
+const URL = server;
 
+interface RequestBody {
+	customer_id?: string;
+	origin?: string;
+	destination?: string;
+}
 
-describe('POST /ride/estimate', () => {
-    interface RequestBody {
-      customer_id?: string;
-      origin?: string;
-      destination?: string;
-    }
+interface SuccessResponseBody {
+	origin: {
+		latitude: number;
+		longitude: number;
+	};
+	destination: {
+		latitude: number;
+		longitude: number;
+	};
+	distance: number;
+	duration: string;
+	options: {
+		id: number;
+		name: string;
+		description: string;
+		vehicle: string;
+		review: {
+			rating: number;
+			comment: string;
+		};
+		value: number;
+	}[];
+	routeResponse: unknown;
+}
 
-    interface SuccessResponseBody {
-      origin: {
-        latitude: number;
-        longitude: number;
-      };
-      destination: {
-        latitude: number;
-        longitude: number;
-      };
-      distance: number;
-      duration: string;
-      options: any[];
-      routeResponse: any;
-    }
+interface ErrorResponse {
+	error_code: "INVALID_DATA";
+	error_description: string;
+}
 
-    interface ErrorResponse {
-        error_code: 'INVALID_DATA';
-        error_description: string;
-    }
+function mockRequestBody(): RequestBody {
+	// Isso serve para garantir que existe uma rota válida
+	// por padrão, o faker pode gerar valores no oceano
+	const SP = {
+		west_lat: -46.84,
+		east_lat: -46.36,
+		north_long: -23.36,
+		south_long: -24.0,
+	};
 
-    function mockRequestBody() : RequestBody {
-      return {
-        customer_id: faker.string.uuid(),
-        origin: `${faker.location.latitude()},${faker.location.longitude()}`,
-        destination: `${faker.location.latitude()},${faker.location.longitude()}`
-      }
-    }
+	return {
+		customer_id: faker.string.uuid(),
+		origin: `${faker.location.latitude({
+			min: SP.south_long,
+			max: SP.north_long,
+		})},${faker.location.longitude({
+			min: SP.west_lat,
+			max: SP.east_lat,
+		})}`,
+		destination: `${faker.location.latitude({
+			min: SP.south_long,
+			max: SP.north_long,
+		})},${faker.location.longitude({
+			min: SP.west_lat,
+			max: SP.east_lat,
+		})}`,
+	};
+}
 
-    it('should return an error if customer_id is not provided', async () => {
-      const body = mockRequestBody();
+describe("POST /ride/estimate", () => {
+	afterAll(() => {
+		server.close();
+	});
 
-      delete body.customer_id;
+	it("should return an error if customer_id is not provided", async () => {
+		const body = mockRequestBody();
 
-      const response = await supertest(URL).post('/ride/estimate').send(body);
-      
+		body.customer_id = undefined;
 
-      expect(response.status).toBe(400);
-      expect((response.body as ErrorResponse).error_code).toBe('INVALID_DATA');
-    })
+		const response = await supertest(URL).post("/ride/estimate").send(body);
 
-    it('should return an error if origin is not provided', async () => {
-      const body = mockRequestBody();
+		expect(response.status).toBe(400);
+		expect((response.body as ErrorResponse).error_code).toBe("INVALID_DATA");
+	});
 
-      delete body.origin;
+	it("should return an error if origin is not provided", async () => {
+		const body = mockRequestBody();
 
-      const response = await supertest(URL).post('/ride/estimate').send(body);
-      
+		body.origin = undefined;
 
-      expect(response.status).toBe(400);
-      expect((response.body as ErrorResponse).error_code).toBe('INVALID_DATA');
-    })
+		const response = await supertest(URL).post("/ride/estimate").send(body);
 
-    it('should return an error if destination is not provided', async () => {
-      const body = mockRequestBody();
+		expect(response.status).toBe(400);
+		expect((response.body as ErrorResponse).error_code).toBe("INVALID_DATA");
+	});
 
-      delete body.destination;
+	it("should return an error if destination is not provided", async () => {
+		const body = mockRequestBody();
 
-      const response = await supertest(URL).post('/ride/estimate').send(body);
-      
+		body.destination = undefined;
 
-      expect(response.status).toBe(400);
-      expect((response.body as ErrorResponse).error_code).toBe('INVALID_DATA');
-    })
+		const response = await supertest(URL).post("/ride/estimate").send(body);
 
-    it('should return an error if origin and destination are the same', async () => {
-      const body = mockRequestBody();
+		expect(response.status).toBe(400);
+		expect((response.body as ErrorResponse).error_code).toBe("INVALID_DATA");
+	});
 
-      body.origin = body.destination;
+	it("should return an error if origin and destination are the same", async () => {
+		const body = mockRequestBody();
 
-      const response = await supertest(URL).post('/ride/estimate').send(body);
-      
+		body.origin = body.destination;
 
-      expect(response.status).toBe(400);
-      expect((response.body as ErrorResponse).error_code).toBe('INVALID_DATA');
-    })
+		const response = await supertest(URL).post("/ride/estimate").send(body);
 
-    it('should get the ride estimate based on the origin and destination', async () => {
-      const body = mockRequestBody()
+		expect(response.status).toBe(400);
+		expect((response.body as ErrorResponse).error_code).toBe("INVALID_DATA");
+	});
 
-      const response = await supertest(URL).post('/ride/estimate').send(body)
+	it("should get the ride estimate based on the origin and destination", async () => {
+		const body = mockRequestBody();
 
-      expect(response.status).toBe(200);
-      expect(response.body).toMatchObject<SuccessResponseBody>({
-        origin: {
-          latitude: expect.any(Number),
-          longitude: expect.any(Number),
-        },
-        destination: {
-          latitude: expect.any(Number),
-          longitude: expect.any(Number),
-        },
-        distance: expect.any(Number),
-        duration: expect.any(String),
-        options: expect.any(Array),
-        routeResponse: expect.any(Object),
-      });
-    });
-  });
+		const response = await supertest(URL).post("/ride/estimate").send(body);
 
-  
+		expect(response.status).toBe(200);
+		expect(response.body).toMatchObject<SuccessResponseBody>({
+			origin: {
+				latitude: expect.any(Number),
+				longitude: expect.any(Number),
+			},
+			destination: {
+				latitude: expect.any(Number),
+				longitude: expect.any(Number),
+			},
+			distance: expect.any(Number),
+			duration: expect.any(String),
+			options: expect.any(Array),
+			routeResponse: expect.any(Object),
+		});
+	}, 20_000);
+
+	it("should get the ride estimate based on specific origin and destination", async () => {
+		const body = mockRequestBody();
+
+		body.origin = "-23.5689557346998, -46.64749565924252"; // Metro Brigadeiro
+		body.destination = "-23.561773697890867, -46.65597730121039"; // MASP
+
+		const response = await supertest(URL).post("/ride/estimate").send(body);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toMatchObject<SuccessResponseBody>({
+			origin: {
+				latitude: expect.any(Number),
+				longitude: expect.any(Number),
+			},
+			destination: {
+				latitude: expect.any(Number),
+				longitude: expect.any(Number),
+			},
+			distance: expect.any(Number),
+			duration: expect.any(String),
+			options: expect.any(Array),
+			routeResponse: expect.any(Object),
+		});
+
+		expect(response.body.distance).toBeGreaterThan(1000);
+	}, 20_000);
+});

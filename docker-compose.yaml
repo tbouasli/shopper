@@ -1,0 +1,39 @@
+name: shopper
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    depends_on:
+      - postgres
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+  www:
+    depends_on:
+      - server
+    build:
+      context: .
+      dockerfile: www/Dockerfile
+      args:
+      - VITE_API_URL=http://192.168.15.49:8080
+    ports:
+      - "80:80"

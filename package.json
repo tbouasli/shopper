@@ -1,11 +1,12 @@
 {
-  "name": "@shopper/root",
-  "description": "",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "license": "ISC",
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.4"
-  }
+	"name": "@shopper/root",
+	"description": "",
+	"scripts": {
+		"format": "biome format --write .",
+		"lint": "biome lint"
+	},
+	"license": "ISC",
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4"
+	}
 }
