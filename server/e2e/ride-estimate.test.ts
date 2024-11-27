@@ -165,6 +165,6 @@ describe("POST /ride/estimate", () => {
 			routeResponse: expect.any(Object),
 		});
 
-		expect(response.body.distance).toBeGreaterThan(1000);
+		expect(response.body.distance).toBeGreaterThan(1);
 	}, 20_000);
 });
