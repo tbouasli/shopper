@@ -99,6 +99,8 @@ const RideList = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">id</TableHead>
+              <TableHead>Origem</TableHead>
+              <TableHead>Destino</TableHead>
               <TableHead>Distancia</TableHead>
               <TableHead>Motorista</TableHead>
               <TableHead>Duracao</TableHead>
@@ -110,6 +112,8 @@ const RideList = () => {
             {data?.rides?.map((ride) => (
               <TableRow key={ride.id}>
                 <TableCell>{ride.id}</TableCell>
+                <TableCell>{ride.origin}</TableCell>
+                <TableCell>{ride.destination}</TableCell>
                 <TableCell>{distance.format(ride.distance)}</TableCell>
                 <TableCell>{ride.driver.name}</TableCell>
                 <TableCell>
