@@ -152,6 +152,20 @@ export function DriverList() {
               {data.options.map((option) => (
                 <CarouselItem key={option.id}>
                   <Driver data={option} />
+                  <div className="flex justify-end gap-4">
+                    <Button onClick={() => confirmRide.mutate(option)}>
+                      {confirmRide.isPending ? (
+                        <LoaderCircle className="animate-spin" />
+                      ) : (
+                        "Confirmar"
+                      )}
+                    </Button>
+                    <DrawerClose onClick={onClose}>
+                      <Button className="w-full" variant="destructive">
+                        Cancel
+                      </Button>
+                    </DrawerClose>
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -159,20 +173,7 @@ export function DriverList() {
             <CarouselNext />
           </Carousel>
         </div>
-        <DrawerFooter>
-          <Button onClick={() => confirmRide.mutate(0)}>
-            {confirmRide.isPending ? (
-              <LoaderCircle className="animate-spin" />
-            ) : (
-              "Confirmar"
-            )}
-          </Button>
-          <DrawerClose onClick={onClose}>
-            <Button className="w-full" variant="destructive">
-              Cancel
-            </Button>
-          </DrawerClose>
-        </DrawerFooter>
+        <DrawerFooter />
       </DrawerContent>
     </Drawer>
   );
