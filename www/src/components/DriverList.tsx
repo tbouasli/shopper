@@ -51,7 +51,7 @@ export function DriverList() {
 
   const confirmRide = useMutation({
     mutationKey: ["confirm-ride", data],
-    mutationFn: (option: number) =>
+    mutationFn: (option: { id: number; name: string; value: number }) =>
       RideService.confirm({
         // biome-ignore lint/style/noNonNullAssertion: this is necessarilly a string
         customer_id: cpf!,
@@ -59,11 +59,11 @@ export function DriverList() {
         origin: `${data?.origin.latitude},${data?.origin.longitude}`,
         distance: data?.distance || 0,
         driver: {
-          id: data?.options[option].id || 0,
-          name: data?.options[option].name || "",
+          id: option.id,
+          name: option.name,
         },
         duration: data?.duration || "",
-        value: data?.options[option].value || 0,
+        value: option.value,
       }),
     onError: (error) => {
       toast({
@@ -111,7 +111,7 @@ export function DriverList() {
                     <Driver data={option} />
                     <div className="flex justify-end gap-4">
                       <AlertDialogAction
-                        onClick={() => confirmRide.mutate(option.id)}
+                        onClick={() => confirmRide.mutate(option)}
                       >
                         {confirmRide.isPending ? (
                           <LoaderCircle className="animate-spin" />
